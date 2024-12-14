@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .username-prompt {
+            margin-top: 20px;
+        }
+
+        .username-prompt input {
+            padding: 10px;
+            font-size: 16px;
+            margin-right: 10px;
+            width: 200px;
+        }
+
+        .username-prompt button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .chat-area {
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-right: 10px;
+        }
+
+        .chat-area div {
+            padding: 5px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f1f1f1;
+        }
+
+        .input-area {
+            display: flex;
+        }
+
+        .input-area input {
+            padding: 10px;
+            font-size: 16px;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+
+        .username-display {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Username Prompt -->
+    <div class="username-prompt">
+        <input type="text" id="username-input" placeholder="Enter your name">
+        <button id="set-username">Set Username</button>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container" style="display: none;">
+        <div class="chat-area"></div>
+        <div class="input-area">
+            <input type="text" placeholder="Type a message">
+            <button>Send</button>
+        </div>
+        <div class="username-display"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyCvy5DDZctG7E5v-SFHsuRnSh77HQxYIk8",
+          authDomain: "chat-app-813cc.firebaseapp.com",
+          projectId: "chat-app-813cc",
+          storageBucket: "chat-app-813cc.firebasestorage.app",
+          messagingSenderId: "124100304916",
+          appId: "1:124100304916:web:a0c36971777ffa5dc68701",
+          measurementId: "G-HFYLQ5BHBQ",
+          databaseURL: "https://chat-app-813cc-default-rtdb.firebaseio.com/"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // DOM Elements
+        const usernameInput = document.getElementById('username-input');
+        const setUsernameButton = document.getElementById('set-username');
+        const usernameDisplay = document.getElementById('username-display');
+        const chatContainer = document.querySelector('.chat-container');
+        const usernamePrompt = document.querySelector('.username-prompt');
+        const inputField = document.querySelector('.input-area input');
+        const chatArea = document.querySelector('.chat-area');
+        const sendButton = document.querySelector('.input-area button');
+
+        let username = '';
+
+        // Set Username
+        setUsernameButton.addEventListener('click', () => {
+          if (usernameInput.value.trim() !== '') {
+            username = usernameInput.value.trim();
+            usernameDisplay.textContent = username;
+            usernamePrompt.style.display = 'none';
+            chatContainer.style.display = 'block';
+          } else {
+            alert('Please enter a valid username.');
+          }
+        });
+
+        // Send Message
+        sendButton.addEventListener('click', () => {
+          const message = inputField.value.trim();
+          if (message) {
+            const timestamp = new Date().toLocaleTimeString(); // Get current time
+            push(ref(database, 'messages'), {
+              username: username,
+              message: message,
+              time: timestamp
+            });
+            inputField.value = ''; // Clear input field
+          }
+        });
+
+        // Listen for New Messages
+        onChildAdded(ref(database, 'messages'), (snapshot) => {
+          const { username, message, time } = snapshot.val();
+          const newMessage = document.createElement('div');
+          newMessage.textContent = `${username} [${time}]: ${message}`;
+          chatArea.appendChild(newMessage);
+          chatArea.scrollTop = chatArea.scrollHeight; // Auto-scroll to bottom
+        });
+    </script>
+
+</body>
+</html>
